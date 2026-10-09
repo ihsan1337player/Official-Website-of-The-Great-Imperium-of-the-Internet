@@ -1,0 +1,417 @@
+openapi: 3.1.0
+info:
+  # Do not change the title, if the title changes, the import paths will be broken
+  title: Api
+  version: 0.1.0
+  description: API specification
+servers:
+  - url: /api
+    description: Base API path
+tags:
+  - name: health
+    description: Health operations
+  - name: members
+    description: Member operations
+  - name: announcements
+    description: Announcement operations
+  - name: laws
+    description: Law operations
+paths:
+  /healthz:
+    get:
+      operationId: healthCheck
+      tags: [health]
+      summary: Health check
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+
+  /members:
+    get:
+      operationId: listMembers
+      tags: [members]
+      summary: List all members
+      responses:
+        "200":
+          description: List of members
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Member"
+
+  /members/me:
+    get:
+      operationId: getMyProfile
+      tags: [members]
+      summary: Get current user's member profile
+      responses:
+        "200":
+          description: Member profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Member"
+        "404":
+          description: Not a member yet
+
+    post:
+      operationId: joinImperium
+      tags: [members]
+      summary: Join the Imperium
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/JoinInput"
+      responses:
+        "201":
+          description: Joined successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Member"
+        "409":
+          description: Already a member
+
+  /members/{userId}/rank:
+    patch:
+      operationId: updateMemberRank
+      tags: [members]
+      summary: Update a member's rank (admin only)
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RankUpdate"
+      responses:
+        "200":
+          description: Rank updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Member"
+        "403":
+          description: Not an admin
+        "404":
+          description: Member not found
+
+  /members/{userId}/ban:
+    patch:
+      operationId: banMember
+      tags: [members]
+      summary: Ban or unban a member (admin only)
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BanUpdate"
+      responses:
+        "200":
+          description: Ban status updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Member"
+        "403":
+          description: Not an admin
+        "404":
+          description: Member not found
+
+  /announcements:
+    get:
+      operationId: listAnnouncements
+      tags: [announcements]
+      summary: List all announcements (newest first)
+      responses:
+        "200":
+          description: List of announcements
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Announcement"
+
+    post:
+      operationId: createAnnouncement
+      tags: [announcements]
+      summary: Post a new announcement (head admin only)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AnnouncementInput"
+      responses:
+        "201":
+          description: Announcement created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Announcement"
+        "403":
+          description: Head admins only
+
+  /announcements/{id}:
+    delete:
+      operationId: deleteAnnouncement
+      tags: [announcements]
+      summary: Delete an announcement (head admin only)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: number
+      responses:
+        "204":
+          description: Deleted
+        "403":
+          description: Head admins only
+        "404":
+          description: Not found
+
+  /laws:
+    get:
+      operationId: listLaws
+      tags: [laws]
+      summary: List all laws in display order
+      responses:
+        "200":
+          description: List of laws
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Law"
+
+    post:
+      operationId: createLaw
+      tags: [laws]
+      summary: Add a new law (head admin only)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LawInput"
+      responses:
+        "201":
+          description: Law created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Law"
+        "403":
+          description: Head admins only
+
+  /laws/{id}:
+    patch:
+      operationId: updateLaw
+      tags: [laws]
+      summary: Edit a law's content (head admin only)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: number
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LawInput"
+      responses:
+        "200":
+          description: Law updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Law"
+        "403":
+          description: Head admins only
+        "404":
+          description: Not found
+
+    delete:
+      operationId: deleteLaw
+      tags: [laws]
+      summary: Delete a law (head admin only)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: number
+      responses:
+        "204":
+          description: Deleted
+        "403":
+          description: Head admins only
+        "404":
+          description: Not found
+
+components:
+  schemas:
+    HealthStatus:
+      type: object
+      properties:
+        status:
+          type: string
+      required:
+        - status
+
+    Member:
+      type: object
+      properties:
+        userId:
+          type: string
+        username:
+          type: string
+        avatarUrl:
+          type: ["string", "null"]
+        rank:
+          type: string
+        joinedAt:
+          type: string
+        isAdmin:
+          type: boolean
+        isHeadAdmin:
+          type: boolean
+        isBanned:
+          type: boolean
+        bannedAt:
+          type: ["string", "null"]
+      required:
+        - userId
+        - username
+        - avatarUrl
+        - rank
+        - joinedAt
+        - isAdmin
+        - isHeadAdmin
+        - isBanned
+        - bannedAt
+
+    JoinInput:
+      type: object
+      properties:
+        username:
+          type: string
+          minLength: 1
+        avatarUrl:
+          type: ["string", "null"]
+      required:
+        - username
+
+    RankUpdate:
+      type: object
+      properties:
+        rank:
+          type: string
+          minLength: 1
+      required:
+        - rank
+
+    BanUpdate:
+      type: object
+      properties:
+        isBanned:
+          type: boolean
+      required:
+        - isBanned
+
+    Announcement:
+      type: object
+      properties:
+        id:
+          type: number
+        title:
+          type: string
+        content:
+          type: string
+        authorId:
+          type: string
+        authorUsername:
+          type: string
+        createdAt:
+          type: string
+      required:
+        - id
+        - title
+        - content
+        - authorId
+        - authorUsername
+        - createdAt
+
+    AnnouncementInput:
+      type: object
+      properties:
+        title:
+          type: string
+          minLength: 1
+        content:
+          type: string
+          minLength: 1
+      required:
+        - title
+        - content
+
+    Law:
+      type: object
+      properties:
+        id:
+          type: number
+        numeral:
+          type: string
+        content:
+          type: string
+        displayOrder:
+          type: number
+        createdAt:
+          type: string
+      required:
+        - id
+        - numeral
+        - content
+        - displayOrder
+        - createdAt
+
+    LawInput:
+      type: object
+      properties:
+        numeral:
+          type: string
+          minLength: 1
+        content:
+          type: string
+          minLength: 1
+        displayOrder:
+          type: number
+      required:
+        - numeral
+        - content
+        - displayOrder
