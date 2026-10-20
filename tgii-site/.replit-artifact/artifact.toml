@@ -1,0 +1,28 @@
+kind = "web"
+previewPath = "/"
+title = "The Great Imperium of the Internet"
+description = "Official website for The Great Imperium of the Internet (TGII) — an internet clan/organization. Contains a home/welcome page, announcements page, laws page, and rank structure page with full working navigation."
+version = "1.0.0"
+id = "artifacts/tgii-site"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 23599
+
+[services.development]
+run = "pnpm --filter @workspace/tgii-site run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/tgii-site", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/tgii-site/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "23599"
+BASE_PATH = "/"
